@@ -1,0 +1,22 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t sohaibashraf/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run -e CI=true sohaibashraf/react-test npm test -- --coverage
+
+after_success:
+  - docker build -t sohaibashraf/multi-client ./client
+  - docker build -t sohaibashraf/multi-nginx ./nginx
+  - docker build -t sohaibashraf/multi-server ./server
+  - docker build -t sohaibashraf/multi-worker ./worker
+
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+
+  - docker push sohaibashraf/multi-client
+  - docker push sohaibashraf/multi-nginx
+  - docker push sohaibashraf/multi-server
+  - docker push sohaibashraf/multi-worker
